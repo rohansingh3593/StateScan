@@ -150,9 +150,9 @@ A typical pytest setup uses `tests/conftest.py` to define:
 
 ## Test Database Configuration
 
-The application builds its database connection from environment variables. Docker Compose supplies `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` to the application container, while PostgreSQL uses the matching values to initialize the database.
+The application builds its database connection from environment variables. Docker Compose supplies `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` to the application container, while PostgreSQL uses the matching values to initialize the application database.
 
-The pytest suite keeps automated test data isolated by setting `DATABASE_URL` to `TEST_DATABASE_URL` before importing the FastAPI app. By default, `TEST_DATABASE_URL` is `sqlite:///:memory:` for fast local tests. If you want integration tests to target a dedicated PostgreSQL test database, set `TEST_DATABASE_URL` to that database URL before running pytest, and do not point it at production data.
+The pytest suite requires a separate `TEST_DB_HOST`, `TEST_DB_PORT`, `TEST_DB_NAME`, `TEST_DB_USER`, and `TEST_DB_PASSWORD` configuration. Test startup fails if any required test database variable is missing, if SQLAlchemy cannot create a connection, or if the active database name does not match `TEST_DB_NAME`. The test setup copies the explicit `TEST_DB_*` values into the application `DB_*` variables before importing the FastAPI app so API tests exercise the app against the dedicated test database instead of the application database.
 
 ## Running the Tests
 

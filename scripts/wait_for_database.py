@@ -4,9 +4,9 @@ import time
 
 import psycopg2
 
-from app.database import build_database_url
+from app.db_config import build_database_url
 
-DATABASE_URL = build_database_url()
+DATABASE_URL = build_database_url("DB")
 MAX_ATTEMPTS = int(os.getenv("DATABASE_WAIT_ATTEMPTS", "30"))
 SLEEP_SECONDS = float(os.getenv("DATABASE_WAIT_SECONDS", "2"))
 

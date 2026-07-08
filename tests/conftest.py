@@ -1,23 +1,32 @@
 import os
 
+from app.db_config import build_database_url, read_database_settings
+
+TEST_SETTINGS = read_database_settings("TEST_DB")
+for setting_name in ("HOST", "PORT", "NAME", "USER", "PASSWORD"):
+    os.environ[f"DB_{setting_name}"] = TEST_SETTINGS[f"TEST_DB_{setting_name}"]
+
+TEST_DATABASE_URL = build_database_url("TEST_DB")
+EXPECTED_TEST_DATABASE_NAME = TEST_SETTINGS["TEST_DB_NAME"]
+
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
-os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-
-from app.database import Base, get_db
+from app.database import Base, DATABASE_URL, get_db
 from app.main import app
 from app.models import Item
 
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+if DATABASE_URL != TEST_DATABASE_URL:
+    raise RuntimeError("Application database URL does not match the configured test database URL.")
+
+engine = create_engine(TEST_DATABASE_URL)
+with engine.connect() as connection:
+    actual_database_name = connection.execute(text("SELECT current_database()"))
+    if actual_database_name.scalar_one() != EXPECTED_TEST_DATABASE_NAME:
+        raise RuntimeError("Connected database does not match TEST_DB_NAME.")
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

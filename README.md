@@ -26,7 +26,7 @@ StateScan/
 
 ## PostgreSQL Docker Configuration
 
-Docker Compose runs PostgreSQL as a dedicated `db` container and the FastAPI app as a separate `web` container on a shared Docker bridge network. The `web` service connects to PostgreSQL using the `db` service name as its database host, and the `postgres_data` Docker volume preserves database files across container restarts.
+Docker Compose runs PostgreSQL as a dedicated `db` container and the FastAPI app as a separate `web` container on a shared Docker bridge network. The `web` service connects to PostgreSQL using the `db` service name as its database host, and the `postgres_data` Docker volume preserves database files across container restarts. The PostgreSQL startup script also creates a separate test database so pytest never writes test data into the application database.
 
 Database configuration is provided through environment variables. Copy the example file before starting the stack if you want to customize the defaults:
 
@@ -40,12 +40,17 @@ Required database environment variables:
 | --- | --- | --- |
 | `DB_HOST` | `db` | PostgreSQL hostname used by the FastAPI container. |
 | `DB_PORT` | `5432` | PostgreSQL port used by the FastAPI container. |
-| `DB_NAME` | `appdb` | Database created by the PostgreSQL container. |
-| `DB_USER` | `postgres` | PostgreSQL username. |
-| `DB_PASSWORD` | `postgres` | PostgreSQL password. |
+| `DB_NAME` | `app_db` | Application database created by the PostgreSQL container. |
+| `DB_USER` | `postgres` | PostgreSQL username for the application database. |
+| `DB_PASSWORD` | `postgres` | PostgreSQL password for the application database. |
+| `TEST_DB_HOST` | `db` | PostgreSQL hostname used by pytest inside Docker. |
+| `TEST_DB_PORT` | `5432` | PostgreSQL port used by pytest inside Docker. |
+| `TEST_DB_NAME` | `test_db` | Dedicated test database created separately from the application database. |
+| `TEST_DB_USER` | `postgres` | PostgreSQL username for the test database. |
+| `TEST_DB_PASSWORD` | `postgres` | PostgreSQL password for the test database. |
 | `DB_HOST_PORT` | `5432` | Optional host port for connecting from your machine. |
 
-The application validates the required database variables at startup and dynamically builds the SQLAlchemy connection URL from them. The PostgreSQL image initializes the configured database automatically through `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`.
+The application validates the required `DB_*` variables at startup and dynamically builds the SQLAlchemy connection URL from them. PostgreSQL initializes the application database through `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`; `scripts/init-test-database.sh` creates the separate `TEST_DB_NAME` database during first-time PostgreSQL container initialization. If any required `DB_*` or `TEST_DB_*` value is missing, Docker Compose or the application/test startup fails with a clear configuration error instead of silently falling back to another database.
 
 To verify the PostgreSQL container is running, use:
 
@@ -58,7 +63,7 @@ To connect from a database client on the Docker host with the default settings, 
 ```text
 Host: localhost
 Port: 5432
-Database: appdb
+Database: app_db
 Username: postgres
 Password: postgres
 ```
@@ -66,7 +71,7 @@ Password: postgres
 You can also open a `psql` shell inside the container:
 
 ```bash
-docker compose exec db psql -U postgres -d appdb
+docker compose exec db psql -U postgres -d app_db
 ```
 
 ## How to Run the Application
@@ -108,7 +113,12 @@ Set the local database environment variables. If PostgreSQL is exposed from Dock
 ```bash
 export DB_HOST=localhost
 export DB_PORT=5432
-export DB_NAME=appdb
+export DB_NAME=app_db
+export TEST_DB_HOST=localhost
+export TEST_DB_PORT=5432
+export TEST_DB_NAME=test_db
+export TEST_DB_USER=postgres
+export TEST_DB_PASSWORD=postgres
 export DB_USER=postgres
 export DB_PASSWORD=postgres
 ```
