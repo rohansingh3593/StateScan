@@ -211,27 +211,21 @@ http://<your-machine-ip>:9000/docs
 
 ### Run Tests Inside Docker
 
-If the application is running through Docker Compose, execute the test suite in the application container.
-
-For this repository, the application service is named `web`:
-
-```bash
-docker compose exec web pytest -v
-```
-
-If your Docker Compose service is named differently, replace `web` with the correct service name.
-
-To rebuild and then run tests:
+Docker Compose automatically executes the full test suite before starting FastAPI:
 
 ```bash
 docker compose up --build
 ```
 
-In a separate terminal:
+During startup, the `web` container waits for PostgreSQL readiness, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts FastAPI only when every test passes. If any test fails, Docker startup stops before Uvicorn is launched.
+
+For this repository, the application service is named `web`. To rerun tests manually in an already running container, use:
 
 ```bash
-docker compose exec web pytest -v
+docker compose exec web pytest -v tests
 ```
+
+If your Docker Compose service is named differently, replace `web` with the correct service name.
 
 ## Expected Outcome
 
