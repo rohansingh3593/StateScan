@@ -198,15 +198,15 @@ pytest tests/test_database.py -v
 Automated pytest tests in this repository use `fastapi.testclient.TestClient`, so they run directly against the FastAPI app instance and do not require a localhost port. If you add external integration tests or manual checks that call the running Docker Compose service, use the host-mapped Docker URL:
 
 ```text
-http://localhost:9000
+http://<your-machine-ip>:9000
 ```
 
 Useful Docker Compose verification URLs:
 
 ```text
-http://localhost:9000/health
-http://localhost:9000/items
-http://localhost:9000/docs
+http://<your-machine-ip>:9000/health
+http://<your-machine-ip>:9000/items
+http://<your-machine-ip>:9000/docs
 ```
 
 ### Run Tests Inside Docker
