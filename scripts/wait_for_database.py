@@ -4,13 +4,11 @@ import time
 
 import psycopg2
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+from app.database import build_database_url
+
+DATABASE_URL = build_database_url()
 MAX_ATTEMPTS = int(os.getenv("DATABASE_WAIT_ATTEMPTS", "30"))
 SLEEP_SECONDS = float(os.getenv("DATABASE_WAIT_SECONDS", "2"))
-
-if not DATABASE_URL:
-    print("DATABASE_URL is not set; skipping database readiness check.", flush=True)
-    sys.exit(0)
 
 for attempt in range(1, MAX_ATTEMPTS + 1):
     try:
