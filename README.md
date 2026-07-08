@@ -32,8 +32,9 @@ This will start both the FastAPI app and the PostgreSQL database.
 
 Once running, open:
 
-- http://localhost:8000/health
-- http://localhost:8000/items
+- http://localhost:9000/health
+- http://localhost:9000/items
+- http://localhost:9000/docs
 
 ### Option 2: Run Locally
 
@@ -53,6 +54,7 @@ The app will be available at:
 
 - http://127.0.0.1:8000/health
 - http://127.0.0.1:8000/items
+- http://127.0.0.1:8000/docs
 
 ### Stop the containers
 
@@ -84,11 +86,11 @@ This script runs `pytest` against the `tests/` folder and prints detailed output
 ### Create an item
 
 ```bash
-curl -X POST "http://localhost:8000/items" -H "Content-Type: application/json" -d '{"name":"sample item"}'
+curl -X POST "http://localhost:9000/items" -H "Content-Type: application/json" -d '{"name":"sample item"}'
 ```
 
 ### List items
 
 ```bash
-curl "http://localhost:8000/items"
+curl "http://localhost:9000/items"
 ```
