@@ -65,12 +65,18 @@ def test_update_item_returns_updated_data_and_persists_changes(client, db_sessio
     assert db_item.is_active is False
 
 
+from sqlalchemy import select
+
+
 def test_delete_item_removes_record_and_returns_success_message(client, db_session, db_item):
-    response = client.delete(f"/items/{db_item.id}")
+    item_id = db_item.id
+
+    response = client.delete(f"/items/{item_id}")
 
     assert response.status_code == 200
     assert response.json() == {"message": "Item deleted successfully"}
 
     db_session.expire_all()
-    assert db_session.get(Item, db_item.id) is None
-    assert client.get(f"/items/{db_item.id}").status_code == 404
+    deleted_item = db_session.execute(select(Item).where(Item.id == item_id)).scalar_one_or_none()
+    assert deleted_item is None
+    assert client.get(f"/items/{item_id}").status_code == 404

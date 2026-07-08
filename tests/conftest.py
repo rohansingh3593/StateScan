@@ -1,19 +1,23 @@
 import os
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-TEST_DATABASE_URL = "sqlite:///./test.db"
+TEST_DATABASE_URL = "sqlite:///:memory:"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 
 from app.database import Base, get_db
 from app.main import app
 from app.models import Item
 
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -31,7 +35,7 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_test_database_file():
     yield
-    Path("test.db").unlink(missing_ok=True)
+    engine.dispose()
 
 
 @pytest.fixture(autouse=True)
