@@ -60,6 +60,25 @@ The app will be available at:
 docker compose down
 ```
 
+## Running Tests with PowerShell
+
+A PowerShell test runner is available at `testcase.ps1`.
+
+From the `StateScan` directory, run:
+
+```powershell
+cd "C:\Users\rohan\repos\Notebook-main\Notebook-main\Docker Project\StateScan"
+.\testcase.ps1 -Verbose
+```
+
+If you need to install dependencies first:
+
+```powershell
+.\testcase.ps1 -InstallDependencies -Verbose
+```
+
+This script runs `pytest` against the `tests/` folder and prints detailed output.
+
 ## Example Requests
 
 ### Create an item
