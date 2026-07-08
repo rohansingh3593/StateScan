@@ -9,12 +9,16 @@ class ItemCreate(BaseModel):
     price: float = Field(..., gt=0)
     is_active: bool = True
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1)
     description: Optional[str] = None
     price: Optional[float] = Field(None, gt=0)
     is_active: Optional[bool] = None
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class ItemResponse(ItemCreate):
