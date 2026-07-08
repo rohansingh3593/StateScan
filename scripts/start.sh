@@ -4,6 +4,7 @@ set -eu
 echo "Starting database service"
 echo "Waiting for database readiness"
 python scripts/wait_for_database.py
+echo "Database connection validated"
 
 echo "Running pytest test suite"
 pytest -v tests

@@ -26,7 +26,7 @@ StateScan/
 
 ## PostgreSQL Docker Configuration
 
-Docker Compose runs PostgreSQL as a dedicated `db` container and the FastAPI app as a separate `web` container on a shared Docker bridge network. The `web` service connects to PostgreSQL using the `db` service name as its database host, and the `postgres_data` Docker volume preserves database files across container restarts. The PostgreSQL startup script also creates a separate test database so pytest never writes test data into the application database.
+Docker Compose runs PostgreSQL as a dedicated `postgres` container and the FastAPI app as a separate `web` container on a shared Docker bridge network. The `web` service connects to PostgreSQL using the `postgres` service name as its database host, and the `postgres_data` Docker volume preserves database files across container restarts. The PostgreSQL startup script also creates a separate test database so pytest never writes test data into the application database.
 
 Database configuration is provided through environment variables. Copy the example file before starting the stack if you want to customize the defaults:
 
@@ -38,12 +38,12 @@ Required database environment variables:
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `DB_HOST` | `db` | PostgreSQL hostname used by the FastAPI container. |
+| `DB_HOST` | `postgres` | PostgreSQL service hostname used by the FastAPI container inside Docker. |
 | `DB_PORT` | `5432` | PostgreSQL port used by the FastAPI container. |
 | `DB_NAME` | `app_db` | Application database created by the PostgreSQL container. |
 | `DB_USER` | `postgres` | PostgreSQL username for the application database. |
 | `DB_PASSWORD` | `postgres` | PostgreSQL password for the application database. |
-| `TEST_DB_HOST` | `db` | PostgreSQL hostname used by pytest inside Docker. |
+| `TEST_DB_HOST` | `postgres` | PostgreSQL service hostname used by pytest inside Docker. |
 | `TEST_DB_PORT` | `5432` | PostgreSQL port used by pytest inside Docker. |
 | `TEST_DB_NAME` | `test_db` | Dedicated test database created separately from the application database. |
 | `TEST_DB_USER` | `postgres` | PostgreSQL username for the test database. |
@@ -55,7 +55,7 @@ The application validates the required `DB_*` variables at startup and dynamical
 To verify the PostgreSQL container is running, use:
 
 ```bash
-docker compose ps db
+docker compose ps postgres
 ```
 
 To connect from a database client on the Docker host with the default settings, use:
@@ -71,7 +71,7 @@ Password: postgres
 You can also open a `psql` shell inside the container:
 
 ```bash
-docker compose exec db psql -U postgres -d app_db
+docker compose exec postgres psql -U postgres -d app_db
 ```
 
 ## How to Run the Application
@@ -86,11 +86,12 @@ docker compose up --build
 
 This builds the FastAPI image, starts PostgreSQL, waits for the database health check, runs the complete `pytest -v tests` suite inside the application container, and starts FastAPI only if every test passes. The container logs show each startup stage:
 
-1. Starting database service
-2. Waiting for database readiness
-3. Running pytest test suite
-4. Test execution summary
-5. Starting FastAPI application
+1. Start PostgreSQL container
+2. Check PostgreSQL health with an authenticated `psql` query
+3. Start the FastAPI container
+4. Validate the FastAPI database connection
+5. Run pytest test cases
+6. Start the API server only if tests pass
 
 If any test fails, pytest exits with a non-zero status code, the failure report remains visible in the Docker logs, and the FastAPI application is not started. Fix the failing test or application code, then run `docker compose up --build` again.
 

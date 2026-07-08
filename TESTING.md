@@ -131,7 +131,7 @@ Database tests should prove that the persistence layer works without risking pro
 
 Guidelines:
 
-- Use a dedicated test database or an isolated in-memory database.
+- Use the dedicated PostgreSQL test database configured with `TEST_DB_*`; do not silently fall back to an in-memory database.
 - Never run automated tests against production data.
 - Override the application database dependency during tests so API calls use the test database.
 - Create database tables before each test or test session as appropriate.
@@ -224,7 +224,7 @@ Docker Compose automatically executes the full test suite before starting FastAP
 docker compose up --build
 ```
 
-During startup, the `web` container waits for PostgreSQL readiness, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts FastAPI only when every test passes. If any test fails, Docker startup stops before Uvicorn is launched.
+During startup, Docker Compose starts the `postgres` service first, waits for its authenticated health check to pass, starts the `web` container, validates the FastAPI database connection, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts Uvicorn only when every test passes. If any test fails, Docker startup stops before the API server is launched.
 
 For this repository, the application service is named `web`. To rerun tests manually in an already running container, use:
 
