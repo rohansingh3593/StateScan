@@ -150,7 +150,7 @@ A typical pytest setup uses `tests/conftest.py` to define:
 
 ## Test Database Configuration
 
-The application builds its database connection from environment variables. Docker Compose supplies `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` to the application container, while PostgreSQL uses the matching values to initialize the application database.
+The application builds its database connection from environment variables. A standalone PostgreSQL Docker container must be running before tests start, and `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` must point to that container.
 
 The pytest suite requires a separate `TEST_DB_HOST`, `TEST_DB_PORT`, `TEST_DB_NAME`, `TEST_DB_USER`, and `TEST_DB_PASSWORD` configuration. Test startup fails if any required test database variable is missing, if SQLAlchemy cannot create a connection, or if the active database name does not match `TEST_DB_NAME`. The test setup copies the explicit `TEST_DB_*` values into the application `DB_*` variables before importing the FastAPI app so API tests exercise the app against the dedicated test database instead of the application database.
 
@@ -224,7 +224,7 @@ Docker Compose automatically executes the full test suite before starting FastAP
 docker compose up --build
 ```
 
-During startup, Docker Compose starts the `postgres` service first, waits for its authenticated health check to pass, starts the `web` container, validates the FastAPI database connection, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts Uvicorn only when every test passes. If any test fails, Docker startup stops before the API server is launched.
+During startup, the `web` container validates the connection to the already-running standalone PostgreSQL container, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts Uvicorn only when every test passes. If the database connection fails or any test fails, Docker startup stops before the API server is launched.
 
 For this repository, the application service is named `web`. To rerun tests manually in an already running container, use:
 

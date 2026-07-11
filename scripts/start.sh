@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-echo "Starting database service"
+echo "Checking standalone PostgreSQL service"
 echo "Waiting for database readiness"
 python scripts/wait_for_database.py
 echo "Database connection validated"
