@@ -131,7 +131,7 @@ Database tests should prove that the persistence layer works without risking pro
 
 Guidelines:
 
-- Use a dedicated test database or an isolated in-memory database.
+- Use the dedicated PostgreSQL test database configured with `TEST_DB_*`; do not silently fall back to an in-memory database.
 - Never run automated tests against production data.
 - Override the application database dependency during tests so API calls use the test database.
 - Create database tables before each test or test session as appropriate.
@@ -146,6 +146,13 @@ A typical pytest setup uses `tests/conftest.py` to define:
 - A `get_db` dependency override for FastAPI.
 - A `TestClient` fixture.
 - Setup and teardown fixtures that create and drop tables.
+
+
+## Test Database Configuration
+
+The application builds its database connection from environment variables. A standalone PostgreSQL Docker container must be running before tests start, and `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` must point to that container.
+
+The pytest suite requires a separate `TEST_DB_HOST`, `TEST_DB_PORT`, `TEST_DB_NAME`, `TEST_DB_USER`, and `TEST_DB_PASSWORD` configuration. Test startup fails if any required test database variable is missing, if SQLAlchemy cannot create a connection, or if the active database name does not match `TEST_DB_NAME`. The test setup copies the explicit `TEST_DB_*` values into the application `DB_*` variables before importing the FastAPI app so API tests exercise the app against the dedicated test database instead of the application database.
 
 ## Running the Tests
 
@@ -192,29 +199,40 @@ pytest tests/test_items_not_found.py -v
 pytest tests/test_database.py -v
 ```
 
-### Run Tests Inside Docker
 
-If the application is running through Docker Compose, execute the test suite in the application container.
+### External Docker API Checks
 
-For this repository, the application service is named `web`:
+Automated pytest tests in this repository use `fastapi.testclient.TestClient`, so they run directly against the FastAPI app instance and do not require a localhost port. If you add external integration tests or manual checks that call the running Docker Compose service, use the host-mapped Docker URL:
 
-```bash
-docker compose exec web pytest -v
+```text
+http://<your-machine-ip>:9000
 ```
 
-If your Docker Compose service is named differently, replace `web` with the correct service name.
+Useful Docker Compose verification URLs:
 
-To rebuild and then run tests:
+```text
+http://<your-machine-ip>:9000/health
+http://<your-machine-ip>:9000/items
+http://<your-machine-ip>:9000/docs
+```
+
+### Run Tests Inside Docker
+
+Docker Compose automatically executes the full test suite before starting FastAPI:
 
 ```bash
 docker compose up --build
 ```
 
-In a separate terminal:
+During startup, the `web` container validates the connection to the already-running standalone PostgreSQL container, runs `pytest -v tests`, prints pytest progress and the final summary to the container logs, and starts Uvicorn only when every test passes. If the database connection fails or any test fails, Docker startup stops before the API server is launched.
+
+For this repository, the application service is named `web`. To rerun tests manually in an already running container, use:
 
 ```bash
-docker compose exec web pytest -v
+docker compose exec web pytest -v tests
 ```
+
+If your Docker Compose service is named differently, replace `web` with the correct service name.
 
 ## Expected Outcome
 
